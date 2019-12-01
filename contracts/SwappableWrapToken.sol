@@ -29,6 +29,7 @@ contract SwappableWrapToken is ERC677Token, ISwappableWrapper, IERC20Wrapper, Ow
         wrappedToken.transferFrom(msg.sender, address(this), wad);
 
         emit ERC20Wrap(msg.sender, wad);
+        emit Transfer(address(0), msg.sender, wad);
 
         return true;
     }
@@ -46,8 +47,9 @@ contract SwappableWrapToken is ERC677Token, ISwappableWrapper, IERC20Wrapper, Ow
         wrappedToken.transfer(msg.sender, wad);
 
         emit ERC20Unwrap(msg.sender, wad);
+        emit Transfer(msg.sender, address(0), wad);
 
-        return true;
+    return true;
     }
 
 
