@@ -39,7 +39,7 @@ contract SwappableWrapToken is ERC677Token, ISwappableWrapper, IERC20Wrapper, Ow
      * @param wad the amount to be unwrapped
      */
     function unwrap(uint wad) public returns (bool){
-        require(balanceOf(msg.sender) >= wad, "Not Enough Balance");
+        require(balanceOf(msg.sender) >= wad, "not enough balance");
 
         totalSupply_ = totalSupply_.sub(wad);
         balances[msg.sender] = balances[msg.sender].sub(wad);
@@ -60,13 +60,13 @@ contract SwappableWrapToken is ERC677Token, ISwappableWrapper, IERC20Wrapper, Ow
      * @param _newToken the new token that will act as the wrapped token
      */
     function swapWrap(address _newToken) public onlyOwner returns (bool){
-        require(AddressUtils.isContract(_newToken));
+        require(AddressUtils.isContract(_newToken), "address is not a contract");
 
         ERC20 originalToken = wrappedToken;
 
         wrappedToken = ERC20(_newToken);
 
-        require(wrappedToken.balanceOf(msg.sender) >= totalSupply_);
+        require(wrappedToken.balanceOf(msg.sender) >= totalSupply_, "Not enough balance of new token");
 
         wrappedToken.transferFrom(msg.sender, this, totalSupply_);
         originalToken.transfer(msg.sender, totalSupply_);
