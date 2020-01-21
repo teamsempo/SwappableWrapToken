@@ -1,16 +1,17 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
-import "openzeppelin-solidity/contracts/AddressUtils.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+
 import "./interfaces/ERC677.sol";
 
-contract ERC677Token is ERC677, DetailedERC20, StandardToken {
+contract ERC677Token is ERC20, ERC20Detailed, ERC677 {
 
     event ContractFallbackCallFailed(address from, address to, uint256 value);
 
-    constructor(string _name, string _symbol, uint8 _decimals)
-    public DetailedERC20(_name, _symbol, _decimals) {
+    constructor(string memory _name, string memory _symbol, uint8 _decimals)
+    public ERC20Detailed(_name, _symbol, _decimals) {
         // solhint-disable-previous-line no-empty-blocks
     }
 
@@ -21,11 +22,11 @@ contract ERC677Token is ERC677, DetailedERC20, StandardToken {
         _;
     }
 
-    function transferAndCall(address _to, uint256 _value, bytes _data) external validRecipient(_to) returns (bool) {
+    function transferAndCall(address _to, uint256 _value, bytes calldata _data) external validRecipient(_to) returns (bool) {
         require(superTransfer(_to, _value));
         emit Transfer(msg.sender, _to, _value, _data);
 
-        if (AddressUtils.isContract(_to)) {
+        if (Address.isContract(_to)) {
             require(contractFallback(msg.sender, _to, _value, _data));
         }
         return true;
@@ -48,13 +49,16 @@ contract ERC677Token is ERC677, DetailedERC20, StandardToken {
     }
 
     function callAfterTransfer(address _from, address _to, uint256 _value) internal {
-        if (AddressUtils.isContract(_to) && !contractFallback(_from, _to, _value, new bytes(0))) {
+        if (Address.isContract(_to) && !contractFallback(_from, _to, _value, new bytes(0))) {
             emit ContractFallbackCallFailed(_from, _to, _value);
         }
     }
 
-    function contractFallback(address _from, address _to, uint256 _value, bytes _data) private returns (bool) {
-        return _to.call(abi.encodeWithSignature("onTokenTransfer(address,uint256,bytes)", _from, _value, _data));
+    function contractFallback(address _from, address _to, uint256 _value, bytes memory _data) private returns (bool) {
+        (bool success, ) = _to.call(
+            abi.encodeWithSignature("onTokenTransfer(address,uint256,bytes)", _from, _value, _data));
+
+        return success;
     }
 
 }
