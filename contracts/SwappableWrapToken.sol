@@ -67,9 +67,10 @@ contract SwappableWrapToken is ERC677Token, ISwappableWrapper, IERC20Wrapper, Ow
         wrappedToken = ERC20(_newToken);
 
         require(wrappedToken.balanceOf(msg.sender) >= totalSupply(), "Not enough balance of new token");
+        require(wrappedToken.allowance(msg.sender, address(this)) >= totalSupply(), "Wrap Contract has insufficient allowance");
 
-        wrappedToken.transferFrom(msg.sender, address(this), totalSupply());
-        originalToken.transfer(msg.sender, totalSupply());
+        require(wrappedToken.transferFrom(msg.sender, address(this), totalSupply()), "New wrapped transferFrom failed");
+        require(originalToken.transfer(msg.sender, totalSupply()), "Orginal wrapped transfer failed");
 
         emit WrapSwap(address(originalToken), address(wrappedToken), msg.sender);
 
