@@ -9,7 +9,7 @@ const networks = {
 };
 
 module.exports = async function(deployer, network) {
-    if (network !== 'development') {
+    if (network !== 'development' && network !== 'soliditycoverage') {
         deployer.deploy(SwappableWrapToken, argv.name, argv.symbol, 18, argv.wrappedToken);
     }
 };
