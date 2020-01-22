@@ -38,7 +38,6 @@ contract ERC677Token is ERC20, ERC20Detailed, ERC677 {
 
     function transfer(address _to, uint256 _value) public returns (bool) {
         require(superTransfer(_to, _value));
-//        callAfterTransfer(msg.sender, _to, _value);
         return true;
     }
 
@@ -46,12 +45,6 @@ contract ERC677Token is ERC20, ERC20Detailed, ERC677 {
         require(super.transferFrom(_from, _to, _value));
         return true;
     }
-//
-//    function callAfterTransfer(address _from, address _to, uint256 _value) internal {
-//        if (Address.isContract(_to) && !contractFallback(_from, _to, _value, new bytes(0))) {
-//            emit ContractFallbackCallFailed(_from, _to, _value);
-//        }
-//    }
 
     function contractFallback(address _from, address _to, uint256 _value, bytes memory _data) private returns (bool) {
         (bool success, ) = _to.call(
