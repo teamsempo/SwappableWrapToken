@@ -27,7 +27,7 @@ contract SwappableWrapToken is ERC677Token, ISwappableWrapper, IERC20Wrapper, Ow
     function wrap(uint wad) public returns (bool){
         _mint(msg.sender, wad);
 
-        wrappedToken.transferFrom(msg.sender, address(this), wad);
+        require(wrappedToken.transferFrom(msg.sender, address(this), wad), "wrapped transferFrom failed");
 
         emit ERC20Wrap(msg.sender, wad);
         emit Transfer(address(0), msg.sender, wad);
@@ -44,7 +44,7 @@ contract SwappableWrapToken is ERC677Token, ISwappableWrapper, IERC20Wrapper, Ow
 
         _burn(msg.sender, wad);
 
-        wrappedToken.transfer(msg.sender, wad);
+        require(wrappedToken.transfer(msg.sender, wad), "wrapped transfer failed");
 
         emit ERC20Unwrap(msg.sender, wad);
         emit Transfer(msg.sender, address(0), wad);
