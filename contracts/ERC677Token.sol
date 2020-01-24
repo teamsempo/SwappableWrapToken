@@ -24,6 +24,7 @@ contract ERC677Token is ERC20, ERC20Detailed, ERC677 {
 
     function transferAndCall(address _to, uint256 _value, bytes calldata _data) external validRecipient(_to) returns (bool) {
         require(superTransfer(_to, _value));
+        emit Transfer(msg.sender, _to, _value, _data);
 
         if (Address.isContract(_to)) {
             require(contractFallback(msg.sender, _to, _value, _data));
