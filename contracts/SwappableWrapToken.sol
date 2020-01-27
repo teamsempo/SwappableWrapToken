@@ -1,9 +1,8 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/AddressUtils.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
 import "./interfaces/ISwappableWrapper.sol";
 import "./interfaces/IERC20Wrapper.sol";
@@ -13,8 +12,11 @@ contract SwappableWrapToken is ERC677Token, ISwappableWrapper, IERC20Wrapper, Ow
 
     ERC20 public wrappedToken;
 
-    constructor(string _name, string _symbol, uint8 _decimals, address _wrappedToken) public ERC677Token(_name, _symbol, _decimals) {
-        require(AddressUtils.isContract(_wrappedToken));
+    constructor(string memory _name, string memory _symbol, uint8 _decimals, address _wrappedToken)
+        public
+        ERC677Token(_name, _symbol, _decimals)
+    {
+        require(Address.isContract(_wrappedToken));
         wrappedToken = ERC20(_wrappedToken);
     }
 
@@ -23,10 +25,9 @@ contract SwappableWrapToken is ERC677Token, ISwappableWrapper, IERC20Wrapper, Ow
      * @param wad the amount to be wrapped
      */
     function wrap(uint wad) public returns (bool){
-        totalSupply_ = totalSupply_.add(wad);
-        balances[msg.sender] = balances[msg.sender].add(wad);
+        _mint(msg.sender, wad);
 
-        wrappedToken.transferFrom(msg.sender, address(this), wad);
+        require(wrappedToken.transferFrom(msg.sender, address(this), wad), "wrapped transferFrom failed");
 
         emit ERC20Wrap(msg.sender, wad);
         emit Transfer(address(0), msg.sender, wad);
@@ -41,10 +42,9 @@ contract SwappableWrapToken is ERC677Token, ISwappableWrapper, IERC20Wrapper, Ow
     function unwrap(uint wad) public returns (bool){
         require(balanceOf(msg.sender) >= wad, "not enough balance");
 
-        totalSupply_ = totalSupply_.sub(wad);
-        balances[msg.sender] = balances[msg.sender].sub(wad);
+        _burn(msg.sender, wad);
 
-        wrappedToken.transfer(msg.sender, wad);
+        require(wrappedToken.transfer(msg.sender, wad), "wrapped transfer failed");
 
         emit ERC20Unwrap(msg.sender, wad);
         emit Transfer(msg.sender, address(0), wad);
@@ -60,18 +60,19 @@ contract SwappableWrapToken is ERC677Token, ISwappableWrapper, IERC20Wrapper, Ow
      * @param _newToken the new token that will act as the wrapped token
      */
     function swapWrap(address _newToken) public onlyOwner returns (bool){
-        require(AddressUtils.isContract(_newToken), "address is not a contract");
+        require(Address.isContract(_newToken), "address is not a contract");
 
         ERC20 originalToken = wrappedToken;
 
         wrappedToken = ERC20(_newToken);
 
-        require(wrappedToken.balanceOf(msg.sender) >= totalSupply_, "Not enough balance of new token");
+        require(wrappedToken.balanceOf(msg.sender) >= totalSupply(), "Not enough balance of new token");
+        require(wrappedToken.allowance(msg.sender, address(this)) >= totalSupply(), "Wrap Contract has insufficient allowance");
 
-        wrappedToken.transferFrom(msg.sender, this, totalSupply_);
-        originalToken.transfer(msg.sender, totalSupply_);
+        require(wrappedToken.transferFrom(msg.sender, address(this), totalSupply()), "New wrapped transferFrom failed");
+        require(originalToken.transfer(msg.sender, totalSupply()), "Orginal wrapped transfer failed");
 
-        emit WrapSwap(originalToken, wrappedToken, msg.sender);
+        emit WrapSwap(address(originalToken), address(wrappedToken), msg.sender);
 
         return true;
     }

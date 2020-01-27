@@ -1,7 +1,7 @@
 const HDWalletProvider = require("truffle-hdwallet-provider");
 
-const infuraApiKey = process.env.INFURA_API_KEY
-const privateKey = process.env.PRIVATE_KEY
+const infuraApiKey = process.env.INFURA_API_KEY;
+const privateKey = process.env.PRIVATE_KEY;
 //
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
@@ -66,6 +66,8 @@ module.exports = {
     // }
   },
 
+  plugins: ["solidity-coverage"],
+
   // Set default mocha options here, use special reporters etc.
   mocha: {
     // timeout: 100000
@@ -74,7 +76,7 @@ module.exports = {
   // Configure your compilers
   compilers: {
     solc: {
-      version: "0.4.24",    // Fetch exact version from solc-bin (default: truffle's version)
+      version: "^0.5.5",    // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       settings: {
        optimizer: {
@@ -85,4 +87,4 @@ module.exports = {
       }
     }
   }
-}
+};

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.5.0;
 
 contract IERC20Wrapper {
     event  ERC20Wrap(address indexed dst, uint wad);
